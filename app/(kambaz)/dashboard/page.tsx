@@ -1,150 +1,171 @@
+"use client";
+
 import Link from "next/link";
-import Image from "next/image";
+import {
+  Row,
+  Col,
+  Card,
+  CardBody,
+  CardImg,
+  CardTitle,
+  CardText,
+  Button,
+} from "react-bootstrap";
+
 export default function Dashboard() {
   return (
     <div id="wd-dashboard">
-      <h1 id="wd-dashboard-title">Dashboard</h1> <hr />
-      <h2 id="wd-dashboard-published">Published Courses (12)</h2> <hr />
+      <h1 id="wd-dashboard-title">Dashboard</h1>
+      <hr />
+      <h2 id="wd-dashboard-published">Published Courses (9)</h2>
+      <hr />
+
       <div id="wd-dashboard-courses">
-        <div className="wd-dashboard-course">
-          <Link href="/courses/1234" className="wd-dashboard-course-link">
-            <Image
-              src="/images/reactjs.jpg"
-              width={200}
-              height={150}
-              alt="reactjs"
-            />
-            <div>
-              <h5> CS1234 React JS </h5>
-              <p className="wd-dashboard-course-title">
-                Full Stack software developer
-              </p>
-              <button> Go </button>
-            </div>
-          </Link>
-        </div>
-        <div className="wd-dashboard-course">
-          <Link href="/courses/3200" className="wd-dashboard-course-link">
-            <Image
-              src="/images/database.jpg"
-              width={200}
-              height={150}
-              alt="reactjs"
-            />
-            <div>
-              <h5> CS3200 Intro to Databases </h5>
-              <p className="wd-dashboard-course-title">Database design</p>
-              <button> Go </button>
-            </div>
-          </Link>
-        </div>
-        <div className="wd-dashboard-course">
-          <Link href="/courses/4100" className="wd-dashboard-course-link">
-            <Image
-              src="/images/AI.jpg"
-              width={200}
-              height={150}
-              alt="reactjs"
-            />
-            <div>
-              <h5> CS4100 Artificial Intelligence </h5>
-              <p className="wd-dashboard-course-title">AI systems</p>
-              <button> Go </button>
-            </div>
-          </Link>
-        </div>
-        <div className="wd-dashboard-course">
-          <Link href="/courses/3540" className="wd-dashboard-course-link">
-            <Image
-              src="/images/c++.jpg"
-              width={200}
-              height={150}
-              alt="reactjs"
-            />
-            <div>
-              <h5> CS3540 Intro to C++ </h5>
-              <p className="wd-dashboard-course-title">C++ programming</p>
-              <button> Go </button>
-            </div>
-          </Link>
-        </div>
-        <div className="wd-dashboard-course">
-          <Link href="/courses/3000" className="wd-dashboard-course-link">
-            <Image
-              src="/images/dsa.jpg"
-              width={200}
-              height={150}
-              alt="reactjs"
-            />
-            <div>
-              <h5> CS3000 Data Structures & Algorithms </h5>
-              <p className="wd-dashboard-course-title">
-                Data Structures & Algorithms
-              </p>
-              <button> Go </button>
-            </div>
-          </Link>
-        </div>
-        <div className="wd-dashboard-course">
-          <Link href="/courses/2000" className="wd-dashboard-course-link">
-            <Image
-              src="/images/calc.jpg"
-              width={200}
-              height={150}
-              alt="reactjs"
-            />
-            <div>
-              <h5> CS2000 Calculus for CS </h5>
-              <p className="wd-dashboard-course-title">Calc 2</p>
-              <button> Go </button>
-            </div>
-          </Link>
-        </div>
-        <div className="wd-dashboard-course">
-          <Link href="/courses/3500" className="wd-dashboard-course-link">
-            <Image
-              src="/images/oop.jpg"
-              width={200}
-              height={150}
-              alt="reactjs"
-            />
-            <div>
-              <h5> CS3500 Object Oriented Programming</h5>
-              <p className="wd-dashboard-course-title">OOP</p>
-              <button> Go </button>
-            </div>
-          </Link>
-        </div>
-        <div className="wd-dashboard-course">
-          <Link href="/courses/4500" className="wd-dashboard-course-link">
-            <Image
-              src="/images/software.jpg"
-              width={200}
-              height={150}
-              alt="reactjs"
-            />
-            <div>
-              <h5> CS4500 Software Development </h5>
-              <p className="wd-dashboard-course-title">Software Engineer</p>
-              <button> Go </button>
-            </div>
-          </Link>
-        </div>
-        <div className="wd-dashboard-course">
-          <Link href="/courses/1000" className="wd-dashboard-course-link">
-            <Image
-              src="/images/eco.jpg"
-              width={200}
-              height={150}
-              alt="reactjs"
-            />
-            <div>
-              <h5> CS1000 Econ in CS Job Market</h5>
-              <p className="wd-dashboard-course-title">Job Market in CS</p>
-              <button> Go </button>
-            </div>
-          </Link>
-        </div>
+        <Row xs={1} md={4} className="g-4">
+          <Col style={{ width: "300px" }}>
+            <Card>
+              <Link
+                href="/courses/1234/home"
+                className="text-decoration-none text-dark"
+              >
+                <CardImg src="/images/reactjs.jpg" height={160} />
+                <CardBody>
+                  <CardTitle>CS1234 React JS</CardTitle>
+                  <CardText>Full Stack software developer</CardText>
+                  <Button>Go</Button>
+                </CardBody>
+              </Link>
+            </Card>
+          </Col>
+
+          <Col style={{ width: "300px" }}>
+            <Card>
+              <Link
+                href="/courses/3200/home"
+                className="text-decoration-none text-dark"
+              >
+                <CardImg src="/images/database.jpg" height={160} />
+                <CardBody>
+                  <CardTitle>CS3200 Intro to Databases</CardTitle>
+                  <CardText>Database design</CardText>
+                  <Button>Go</Button>
+                </CardBody>
+              </Link>
+            </Card>
+          </Col>
+
+          <Col style={{ width: "300px" }}>
+            <Card>
+              <Link
+                href="/courses/4100/home"
+                className="text-decoration-none text-dark"
+              >
+                <CardImg src="/images/AI.jpg" height={160} />
+                <CardBody>
+                  <CardTitle>CS4100 Artificial Intelligence</CardTitle>
+                  <CardText>AI systems</CardText>
+                  <Button>Go</Button>
+                </CardBody>
+              </Link>
+            </Card>
+          </Col>
+
+          <Col style={{ width: "300px" }}>
+            <Card>
+              <Link
+                href="/courses/3540/home"
+                className="text-decoration-none text-dark"
+              >
+                <CardImg src="/images/c++.jpg" height={160} />
+                <CardBody>
+                  <CardTitle>CS3540 Intro to C++</CardTitle>
+                  <CardText>C++ programming</CardText>
+                  <Button>Go</Button>
+                </CardBody>
+              </Link>
+            </Card>
+          </Col>
+
+          <Col style={{ width: "300px" }}>
+            <Card>
+              <Link
+                href="/courses/3000/home"
+                className="text-decoration-none text-dark"
+              >
+                <CardImg src="/images/dsa.jpg" height={160} />
+                <CardBody>
+                  <CardTitle>CS3000 Data Structures</CardTitle>
+                  <CardText>Algorithms & Data Structures</CardText>
+                  <Button>Go</Button>
+                </CardBody>
+              </Link>
+            </Card>
+          </Col>
+
+          <Col style={{ width: "300px" }}>
+            <Card>
+              <Link
+                href="/courses/2000/home"
+                className="text-decoration-none text-dark"
+              >
+                <CardImg src="/images/calc.jpg" height={160} />
+                <CardBody>
+                  <CardTitle>CS2000 Calculus</CardTitle>
+                  <CardText>Calculus for CS</CardText>
+                  <Button>Go</Button>
+                </CardBody>
+              </Link>
+            </Card>
+          </Col>
+
+          <Col style={{ width: "300px" }}>
+            <Card>
+              <Link
+                href="/courses/3500/home"
+                className="text-decoration-none text-dark"
+              >
+                <CardImg src="/images/oop.jpg" height={160} />
+                <CardBody>
+                  <CardTitle>CS3500 OOP</CardTitle>
+                  <CardText>Object Oriented Programming</CardText>
+                  <Button>Go</Button>
+                </CardBody>
+              </Link>
+            </Card>
+          </Col>
+
+          <Col style={{ width: "300px" }}>
+            <Card>
+              <Link
+                href="/courses/4500/home"
+                className="text-decoration-none text-dark"
+              >
+                <CardImg src="/images/software.jpg" height={160} />
+                <CardBody>
+                  <CardTitle>CS4500 Software Dev</CardTitle>
+                  <CardText>Software Engineering</CardText>
+                  <Button>Go</Button>
+                </CardBody>
+              </Link>
+            </Card>
+          </Col>
+
+          <Col style={{ width: "300px" }}>
+            <Card>
+              <Link
+                href="/courses/1000/home"
+                className="text-decoration-none text-dark"
+              >
+                <CardImg src="/images/eco.jpg" height={160} />
+                <CardBody>
+                  <CardTitle>CS1000 Econ</CardTitle>
+                  <CardText>CS Job Market</CardText>
+                  <Button>Go</Button>
+                </CardBody>
+              </Link>
+            </Card>
+          </Col>
+        </Row>
       </div>
     </div>
   );
