@@ -1,9 +1,19 @@
+"use client";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Link from "next/link";
+import { useParams } from "next/navigation";
+import * as db from "../../../database";
+
 import { Button, Form, ListGroup, ListGroupItem } from "react-bootstrap";
 import { BsGripVertical, BsThreeDotsVertical, BsPlus } from "react-icons/bs";
 import { FaSearch, FaCheckCircle } from "react-icons/fa";
 
 export default function Assignments() {
+  const { cid } = useParams<{ cid: string }>();
+
+  const assignments = db.assignments.filter((a: any) => a.course === cid);
+
   return (
     <div id="wd-assignments">
       <div className="d-flex mb-3">
@@ -38,62 +48,30 @@ export default function Assignments() {
           </span>
         </ListGroupItem>
 
-        <ListGroupItem>
-          <BsGripVertical className="me-2" />
-          <Link
-            href="/courses/1234/assignments/123"
-            className="fw-bold text-decoration-none text-dark"
-          >
-            A1 - ENV + HTML
-          </Link>
-          <br />
-          <small>
-            Multiple Modules | Not available until May 6 at 12:00 am | Due May
-            13 at 11:59pm | 100pts
-          </small>
-          <span className="float-end">
-            <FaCheckCircle className="text-success me-2" />
-            <BsThreeDotsVertical />
-          </span>
-        </ListGroupItem>
+        {assignments.map((a: any) => (
+          <ListGroupItem key={a._id}>
+            <BsGripVertical className="me-2" />
 
-        <ListGroupItem>
-          <BsGripVertical className="me-2" />
-          <Link
-            href="/courses/1234/assignments/456"
-            className="fw-bold text-decoration-none text-dark"
-          >
-            A2 - CSS + BOOTSTRAP
-          </Link>
-          <br />
-          <small>
-            Multiple Modules | Not available until May 13 at 12:00 am | Due May
-            20 at 11:59pm | 100pts
-          </small>
-          <span className="float-end">
-            <FaCheckCircle className="text-success me-2" />
-            <BsThreeDotsVertical />
-          </span>
-        </ListGroupItem>
+            <Link
+              href={`/courses/${cid}/assignments/${a._id}`}
+              className="fw-bold text-decoration-none text-dark"
+            >
+              {a.title}
+            </Link>
 
-        <ListGroupItem>
-          <BsGripVertical className="me-2" />
-          <Link
-            href="/courses/1234/assignments/789"
-            className="fw-bold text-decoration-none text-dark"
-          >
-            A3 - JAVASCRIPT + REACT
-          </Link>
-          <br />
-          <small>
-            Multiple Modules | Not available until May 20 at 12:00 am | Due May
-            27 at 11:59pm | 100pts
-          </small>
-          <span className="float-end">
-            <FaCheckCircle className="text-success me-2" />
-            <BsThreeDotsVertical />
-          </span>
-        </ListGroupItem>
+            <br />
+
+            <small>
+              Multiple Modules | Not available until {a.availableDate} | Due{" "}
+              {a.dueDate} | {a.points}pts
+            </small>
+
+            <span className="float-end">
+              <FaCheckCircle className="text-success me-2" />
+              <BsThreeDotsVertical />
+            </span>
+          </ListGroupItem>
+        ))}
       </ListGroup>
     </div>
   );
