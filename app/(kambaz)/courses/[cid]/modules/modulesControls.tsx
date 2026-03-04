@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+import ModuleEditor from "./ModuleEditor";
 import {
   Button,
   Dropdown,
@@ -6,9 +9,21 @@ import {
   DropdownToggle,
 } from "react-bootstrap";
 import { FaPlus } from "react-icons/fa6";
+import { useState } from "react";
 import GreenCheckmark from "./GreenCheckmark";
 
-export default function ModulesControls() {
+export default function ModulesControls({
+  moduleName,
+  setModuleName,
+  addModule,
+}: {
+  moduleName: string;
+  setModuleName: (title: string) => void;
+  addModule: () => void;
+}) {
+  const [show, setShow] = useState(false);
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
   return (
     <div
       id="wd-modules-controls"
