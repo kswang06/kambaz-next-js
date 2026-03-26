@@ -1,23 +1,59 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import * as db from "../../../../database";
-
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import * as client from "../../../client";
 import { Button, Form } from "react-bootstrap";
 
 export default function AssignmentEditor() {
   const { cid, aid } = useParams<{ cid: string; aid: string }>();
+  const router = useRouter();
 
-  const assignment = db.assignments.find((a: any) => a._id === aid);
+  const [assignment, setAssignment] = useState<any>({
+    _id: "",
+    title: "",
+    description: "",
+    points: 0,
+    dueDate: "",
+    availableDate: "",
+    untilDate: "",
+    course: cid,
+  });
+
+  const fetchAssignment = async () => {
+    if (aid === "new") return;
+    const data = await client.findAssignmentById(aid);
+    setAssignment(data);
+  };
+
+  const saveAssignment = async () => {
+    if (aid === "new") {
+      await client.createAssignmentForCourse(cid, assignment);
+    } else {
+      await client.updateAssignment(assignment);
+    }
+    router.push(`/courses/${cid}/assignments`);
+  };
+
+  useEffect(() => {
+    fetchAssignment();
+  }, []);
 
   return (
     <div id="wd-assignments-editor">
       <Form>
         <Form.Group className="mb-3" controlId="wd-name">
           <Form.Label>Assignment Name</Form.Label>
-          <Form.Control id="wd-name" defaultValue={assignment?.title || ""} />
+          <Form.Control
+            id="wd-name"
+            value={assignment.title}
+            onChange={(e) =>
+              setAssignment({ ...assignment, title: e.target.value })
+            }
+          />
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="wd-description">
@@ -25,7 +61,10 @@ export default function AssignmentEditor() {
             as="textarea"
             rows={4}
             id="wd-description"
-            defaultValue={assignment?.description || ""}
+            value={assignment.description}
+            onChange={(e) =>
+              setAssignment({ ...assignment, description: e.target.value })
+            }
           />
         </Form.Group>
 
@@ -34,9 +73,16 @@ export default function AssignmentEditor() {
           <Form.Control
             id="wd-points"
             type="number"
-            defaultValue={assignment?.points ?? 0}
+            value={assignment.points}
+            onChange={(e) =>
+              setAssignment({
+                ...assignment,
+                points: Number(e.target.value),
+              })
+            }
           />
         </Form.Group>
+
         <Form.Group className="mb-3" controlId="wd-select-assignment-group">
           <Form.Label>Assignment Group</Form.Label>
           <Form.Select
@@ -100,7 +146,7 @@ export default function AssignmentEditor() {
           </div>
         </Form.Group>
 
-        <Form.Group className="mb-3" controlId="wd-assign-to">
+        <Form.Group className="mb-3" controlId="wd-assign-to-box">
           <Form.Label>Assign</Form.Label>
 
           <div className="border p-3">
@@ -113,8 +159,11 @@ export default function AssignmentEditor() {
               <Form.Label>Due</Form.Label>
               <Form.Control
                 type="date"
-                defaultValue={assignment?.dueDate || ""}
                 id="wd-due-date"
+                value={assignment.dueDate}
+                onChange={(e) =>
+                  setAssignment({ ...assignment, dueDate: e.target.value })
+                }
               />
             </Form.Group>
 
@@ -124,8 +173,14 @@ export default function AssignmentEditor() {
                   <Form.Label>Available from</Form.Label>
                   <Form.Control
                     type="date"
-                    defaultValue={assignment?.availableDate || ""}
                     id="wd-available-date"
+                    value={assignment.availableDate}
+                    onChange={(e) =>
+                      setAssignment({
+                        ...assignment,
+                        availableDate: e.target.value,
+                      })
+                    }
                   />
                 </Form.Group>
               </div>
@@ -135,14 +190,21 @@ export default function AssignmentEditor() {
                   <Form.Label>Until</Form.Label>
                   <Form.Control
                     type="date"
-                    defaultValue={assignment?.untilDate || ""}
                     id="wd-until-date"
+                    value={assignment.untilDate}
+                    onChange={(e) =>
+                      setAssignment({
+                        ...assignment,
+                        untilDate: e.target.value,
+                      })
+                    }
                   />
                 </Form.Group>
               </div>
             </div>
           </div>
         </Form.Group>
+
         <div className="float-end">
           <Link
             href={`/courses/${cid}/assignments`}
@@ -150,9 +212,13 @@ export default function AssignmentEditor() {
           >
             Cancel
           </Link>
-          <Link href={`/courses/${cid}/assignments`} className="btn btn-danger">
+          <Button
+            type="button"
+            className="btn btn-danger"
+            onClick={saveAssignment}
+          >
             Save
-          </Link>
+          </Button>
         </div>
       </Form>
     </div>

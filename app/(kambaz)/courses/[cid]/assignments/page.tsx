@@ -1,13 +1,10 @@
-// app/(kambaz)/courses/[cid]/assignments/page.tsx
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../../store";
-import { deleteAssignment } from "./reducer";
-
 import { Button, Form, ListGroup, ListGroupItem } from "react-bootstrap";
 import {
   BsGripVertical,
@@ -16,15 +13,31 @@ import {
   BsTrash,
 } from "react-icons/bs";
 import { FaSearch, FaCheckCircle } from "react-icons/fa";
+import * as client from "../../client";
 
 export default function Assignments() {
   const { cid } = useParams<{ cid: string }>();
   const router = useRouter();
-  const dispatch = useDispatch();
+  const [assignments, setAssignments] = useState<any[]>([]);
 
-  const { assignments } = useSelector(
-    (state: RootState) => state.assignmentsReducer,
-  );
+  const fetchAssignments = async () => {
+    const data = await client.findAssignmentsForCourse(cid);
+    setAssignments(data);
+  };
+
+  const onDeleteAssignment = async (assignmentId: string, title: string) => {
+    const ok = window.confirm(
+      `Delete "${title}"?\n\nAre you sure you want to remove this assignment?`,
+    );
+    if (!ok) return;
+
+    await client.deleteAssignment(assignmentId);
+    setAssignments(assignments.filter((a: any) => a._id !== assignmentId));
+  };
+
+  useEffect(() => {
+    fetchAssignments();
+  }, []);
 
   return (
     <div id="wd-assignments">
@@ -65,49 +78,43 @@ export default function Assignments() {
           </span>
         </ListGroupItem>
 
-        {assignments
-          .filter((a: any) => a.course === cid)
-          .map((a: any) => (
-            <ListGroupItem key={a._id}>
-              <BsGripVertical className="me-2" />
+        {assignments.map((a: any) => (
+          <ListGroupItem key={a._id}>
+            <BsGripVertical className="me-2" />
 
-              <Link
-                href={`/courses/${cid}/assignments/${a._id}`}
-                className="fw-bold text-decoration-none text-dark"
+            <Link
+              href={`/courses/${cid}/assignments/${a._id}`}
+              className="fw-bold text-decoration-none text-dark"
+            >
+              {a.title}
+            </Link>
+
+            <br />
+
+            <small>
+              Multiple Modules | Not available until {a.availableDate} | Due{" "}
+              {a.dueDate} | {a.points}pts
+            </small>
+
+            <span className="float-end">
+              <button
+                className="btn btn-sm btn-link text-danger p-0 me-2"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDeleteAssignment(a._id, a.title);
+                }}
+                aria-label={`Delete ${a.title}`}
+                title="Delete"
               >
-                {a.title}
-              </Link>
+                <BsTrash />
+              </button>
 
-              <br />
-
-              <small>
-                Multiple Modules | Not available until {a.availableDate} | Due{" "}
-                {a.dueDate} | {a.points}pts
-              </small>
-
-              <span className="float-end">
-                <button
-                  className="btn btn-sm btn-link text-danger p-0 me-2"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const ok = window.confirm(
-                      `Delete "${a.title}"?\n\nAre you sure you want to remove this assignment?`,
-                    );
-                    if (!ok) return;
-                    dispatch(deleteAssignment(a._id));
-                  }}
-                  aria-label={`Delete ${a.title}`}
-                  title="Delete"
-                >
-                  <BsTrash />
-                </button>
-
-                <FaCheckCircle className="text-success me-2" />
-                <BsThreeDotsVertical />
-              </span>
-            </ListGroupItem>
-          ))}
+              <FaCheckCircle className="text-success me-2" />
+              <BsThreeDotsVertical />
+            </span>
+          </ListGroupItem>
+        ))}
       </ListGroup>
     </div>
   );
