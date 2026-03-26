@@ -81,6 +81,7 @@ export default function ModulesControls({
         size="lg"
         id="wd-add-module-btn"
         style={{ minWidth: 140 }}
+        onClick={addModule}
       >
         <FaPlus className="position-relative me-2" style={{ bottom: "1px" }} />
         Module
