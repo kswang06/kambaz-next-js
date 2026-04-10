@@ -2,10 +2,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
-import { setCourses } from "../courses/reducer";
+import { setCourses, addNewCourse } from "../courses/reducer";
 import { RootState } from "../store";
 import * as client from "../courses/client";
 
@@ -40,7 +40,50 @@ export default function Dashboard() {
     description: "New Description",
   });
 
-  const fetchDashboardData = async () => {
+  const getCourseImage = (course: any) => {
+    // Map course names to appropriate images
+    const imageMap: { [key: string]: string } = {
+      "CS1234 React JS": "/images/reactjs.jpg",
+      "CS3200 Intro to Databases": "/images/database.jpg",
+      "CS4100 Artificial Intelligence": "/images/AI.jpg",
+      "CS3540 Intro to C++": "/images/c++.jpg",
+      "CS3000 Data Structures": "/images/dsa.jpg",
+      "CS2000 Calculus": "/images/calc.jpg",
+      "CS3500 OOP": "/images/oop.jpg",
+      "CS4500 Software Dev": "/images/software.jpg",
+      "CS1000 Econ": "/images/eco.jpg",
+    };
+
+    return course.image || imageMap[course.name] || "/images/reactjs.jpg";
+  };
+
+  const getImageForNewCourse = (courseName: string) => {
+    const name = courseName.toLowerCase();
+    if (name.includes("react") || name.includes("javascript"))
+      return "/images/reactjs.jpg";
+    if (name.includes("database") || name.includes("sql"))
+      return "/images/database.jpg";
+    if (
+      name.includes("ai") ||
+      name.includes("artificial") ||
+      name.includes("intelligence")
+    )
+      return "/images/AI.jpg";
+    if (name.includes("c++") || name.includes("cpp")) return "/images/c++.jpg";
+    if (name.includes("data structure") || name.includes("algorithm"))
+      return "/images/dsa.jpg";
+    if (name.includes("calculus") || name.includes("math"))
+      return "/images/calc.jpg";
+    if (name.includes("oop") || name.includes("object"))
+      return "/images/oop.jpg";
+    if (name.includes("software") || name.includes("engineering"))
+      return "/images/software.jpg";
+    if (name.includes("econ") || name.includes("economy"))
+      return "/images/eco.jpg";
+    return "/images/reactjs.jpg"; // default
+  };
+
+  const fetchDashboardData = useCallback(async () => {
     try {
       const [allCourses, myEnrollments] = await Promise.all([
         client.fetchAllCourses(),
@@ -51,12 +94,21 @@ export default function Dashboard() {
     } catch (error) {
       console.error(error);
     }
-  };
+  }, [dispatch]);
 
   const onAddNewCourse = async () => {
     try {
-      await client.createCourse(course);
+      const courseWithImage = {
+        ...course,
+        image: getImageForNewCourse(course.name),
+      };
+      dispatch(addNewCourse(courseWithImage));
 
+      try {
+        await client.createCourse(courseWithImage);
+      } catch (error) {
+        console.error(error);
+      }
       await fetchDashboardData();
 
       setCourse({
@@ -74,20 +126,30 @@ export default function Dashboard() {
   };
 
   const onDeleteCourse = async (courseId: string) => {
-    await client.deleteCourse(courseId);
-    dispatch(setCourses(courses.filter((course) => course._id !== courseId)));
-    setEnrollments(
-      enrollments.filter((enrollment: any) => enrollment.course !== courseId),
-    );
+    try {
+      await client.deleteCourse(courseId);
+      dispatch(setCourses(courses.filter((course) => course._id !== courseId)));
+      setEnrollments(
+        enrollments.filter((enrollment: any) => enrollment.course !== courseId),
+      );
+    } catch (error) {
+      console.error("Failed to delete course", error);
+    }
   };
 
   const onUpdateCourse = async () => {
-    await client.updateCourse(course);
+    // Ensure course has appropriate image
+    const courseWithImage = {
+      ...course,
+      image: getImageForNewCourse(course.name),
+    };
+
+    await client.updateCourse(courseWithImage);
     dispatch(
       setCourses(
         courses.map((c) => {
-          if (c._id === course._id) {
-            return course;
+          if (c._id === courseWithImage._id) {
+            return courseWithImage;
           } else {
             return c;
           }
@@ -99,9 +161,13 @@ export default function Dashboard() {
   const isEnrolled = (courseId: string) =>
     enrollments.some((enrollment: any) => enrollment.course === courseId);
 
+  const userId = currentUser
+    ? (currentUser as any)._id || (currentUser as any).id
+    : undefined;
+
   const onEnroll = async (courseId: string) => {
     try {
-      const enrollment = await client.enrollInCourse(courseId);
+      const enrollment = await client.enrollIntoCourse(userId, courseId);
       setEnrollments([...enrollments, enrollment]);
     } catch (error) {
       console.error(error);
@@ -110,7 +176,7 @@ export default function Dashboard() {
 
   const onUnenroll = async (courseId: string) => {
     try {
-      await client.unenrollFromCourse(courseId);
+      await client.unenrollFromCourse(userId, courseId);
       setEnrollments(
         enrollments.filter((enrollment: any) => enrollment.course !== courseId),
       );
@@ -121,7 +187,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [currentUser]);
+  }, [currentUser, fetchDashboardData]);
 
   return (
     <div id="wd-dashboard">
@@ -187,7 +253,7 @@ export default function Dashboard() {
                   className="text-decoration-none text-dark"
                 >
                   <CardImg
-                    src={course.image || "/images/reactjs.jpg"}
+                    src={getCourseImage(course)}
                     height={160}
                     variant="top"
                   />
@@ -195,54 +261,61 @@ export default function Dashboard() {
                   <CardBody>
                     <CardTitle>{course.name}</CardTitle>
                     <CardText>{course.description}</CardText>
-
-                    <Button className="btn btn-primary me-2">Go</Button>
-
-                    {isEnrolled(course._id) ? (
-                      <button
-                        className="btn btn-warning me-2"
-                        onClick={(event) => {
-                          event.preventDefault();
-                          onUnenroll(course._id);
-                        }}
-                      >
-                        Unenroll
-                      </button>
-                    ) : (
-                      <button
-                        className="btn btn-success me-2"
-                        onClick={(event) => {
-                          event.preventDefault();
-                          onEnroll(course._id);
-                        }}
-                      >
-                        Enroll
-                      </button>
-                    )}
-
-                    <button
-                      onClick={(event) => {
-                        event.preventDefault();
-                        onDeleteCourse(course._id);
-                      }}
-                      className="btn btn-danger me-2"
-                      id="wd-delete-course-click"
-                    >
-                      Delete
-                    </button>
-
-                    <button
-                      id="wd-edit-course-click"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setCourse(course);
-                      }}
-                      className="btn btn-warning"
-                    >
-                      Edit
-                    </button>
                   </CardBody>
                 </Link>
+
+                <CardBody>
+                  <Button className="btn btn-primary me-2">Go</Button>
+
+                  {isEnrolled(course._id) ? (
+                    <button
+                      className="btn btn-warning me-2"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        onUnenroll(course._id);
+                      }}
+                      disabled={!userId}
+                    >
+                      Unenroll
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn-success me-2"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        onEnroll(course._id);
+                      }}
+                      disabled={!userId}
+                    >
+                      Enroll
+                    </button>
+                  )}
+
+                  <button
+                    onClick={(event) => {
+                      event.preventDefault();
+                      onDeleteCourse(course._id);
+                    }}
+                    className="btn btn-danger me-2"
+                    id="wd-delete-course-click"
+                  >
+                    Delete
+                  </button>
+
+                  <button
+                    id="wd-edit-course-click"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setCourse({
+                        ...course,
+                        image: getImageForNewCourse(course.name),
+                      });
+                    }}
+                    className="btn btn-warning"
+                  >
+                    Edit
+                  </button>
+                </CardBody>
               </Card>
             </Col>
           ))}
