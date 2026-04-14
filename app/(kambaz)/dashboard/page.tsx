@@ -29,6 +29,7 @@ export default function Dashboard() {
 
   const dispatch = useDispatch();
   const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [allCourses, setAllCourses] = useState<any[]>([]);
 
   const [course, setCourse] = useState<any>({
     _id: "0",
@@ -85,11 +86,13 @@ export default function Dashboard() {
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      const [allCourses, myEnrollments] = await Promise.all([
+      const [myCourses, everyCourse, myEnrollments] = await Promise.all([
+        client.findMyCourses(),
         client.fetchAllCourses(),
         client.findMyEnrollments(),
       ]);
-      dispatch(setCourses(allCourses));
+      dispatch(setCourses(myCourses));
+      setAllCourses(everyCourse);
       setEnrollments(myEnrollments);
     } catch (error) {
       console.error(error);
@@ -161,6 +164,12 @@ export default function Dashboard() {
   const isEnrolled = (courseId: string) =>
     enrollments.some((enrollment: any) => enrollment.course === courseId);
 
+  const role = (currentUser as any)?.role || "STUDENT";
+  const isFaculty = role === "FACULTY" || role === "ADMIN";
+  const availableCourses = allCourses.filter(
+    (candidate: any) => !isEnrolled(candidate._id),
+  );
+
   const userId = currentUser
     ? (currentUser as any)._id || (currentUser as any).id
     : undefined;
@@ -196,50 +205,60 @@ export default function Dashboard() {
 
       <h5>
         New Course
-        <button
-          className="btn btn-primary"
-          id="wd-add-new-course-click"
-          onClick={onAddNewCourse}
-        >
-          Add
-        </button>
-        <button
-          className="btn btn-warning"
-          onClick={onUpdateCourse}
-          id="wd-update-course-click"
-        >
-          Update
-        </button>
+        {isFaculty && (
+          <>
+            <button
+              className="btn btn-primary"
+              id="wd-add-new-course-click"
+              onClick={onAddNewCourse}
+            >
+              Add
+            </button>
+            <button
+              className="btn btn-warning"
+              onClick={onUpdateCourse}
+              id="wd-update-course-click"
+            >
+              Update
+            </button>
+          </>
+        )}
       </h5>
 
-      <br />
+      {isFaculty && <br />}
 
-      <FormControl
-        value={course.name}
-        className="mb-2"
-        onChange={(e) =>
-          setCourse({
-            ...course,
-            name: e.target.value,
-          })
-        }
-      />
+      {isFaculty && (
+        <>
+          <FormControl
+            value={course.name}
+            className="mb-2"
+            onChange={(e) =>
+              setCourse({
+                ...course,
+                name: e.target.value,
+              })
+            }
+          />
 
-      <FormControl
-        as="textarea"
-        rows={3}
-        value={course.description}
-        onChange={(e) =>
-          setCourse({
-            ...course,
-            description: e.target.value,
-          })
-        }
-      />
+          <FormControl
+            as="textarea"
+            rows={3}
+            value={course.description}
+            onChange={(e) =>
+              setCourse({
+                ...course,
+                description: e.target.value,
+              })
+            }
+          />
 
-      <hr />
+          <hr />
+        </>
+      )}
 
-      <h2 id="wd-dashboard-published">Published Courses ({courses.length})</h2>
+      <h2 id="wd-dashboard-published">
+        {isFaculty ? "My Courses" : "Enrolled Courses"} ({courses.length})
+      </h2>
 
       <hr />
 
@@ -291,36 +310,79 @@ export default function Dashboard() {
                     </button>
                   )}
 
-                  <button
-                    onClick={(event) => {
-                      event.preventDefault();
-                      onDeleteCourse(course._id);
-                    }}
-                    className="btn btn-danger me-2"
-                    id="wd-delete-course-click"
-                  >
-                    Delete
-                  </button>
+                  {isFaculty && (
+                    <>
+                      <button
+                        onClick={(event) => {
+                          event.preventDefault();
+                          onDeleteCourse(course._id);
+                        }}
+                        className="btn btn-danger me-2"
+                        id="wd-delete-course-click"
+                      >
+                        Delete
+                      </button>
 
-                  <button
-                    id="wd-edit-course-click"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      setCourse({
-                        ...course,
-                        image: getImageForNewCourse(course.name),
-                      });
-                    }}
-                    className="btn btn-warning"
-                  >
-                    Edit
-                  </button>
+                      <button
+                        id="wd-edit-course-click"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          setCourse({
+                            ...course,
+                            image: getImageForNewCourse(course.name),
+                          });
+                        }}
+                        className="btn btn-warning"
+                      >
+                        Edit
+                      </button>
+                    </>
+                  )}
                 </CardBody>
               </Card>
             </Col>
           ))}
         </Row>
       </div>
+
+      {availableCourses.length > 0 && (
+        <>
+          <hr />
+          <h2>
+            {isFaculty ? "Available Courses To Join" : "Available Courses"} (
+            {availableCourses.length})
+          </h2>
+          <div className="text-muted mb-3">
+            {isFaculty
+              ? "Faculty can enroll in an existing course to manage its content and quizzes."
+              : "Students only see enrolled courses above. Enroll below to add courses to the dashboard."}
+          </div>
+          <Row xs={1} md={4} className="g-4">
+            {availableCourses.map((course: any) => (
+              <Col key={course._id} style={{ width: "300px" }}>
+                <Card>
+                  <CardImg
+                    src={getCourseImage(course)}
+                    height={160}
+                    variant="top"
+                  />
+                  <CardBody>
+                    <CardTitle>{course.name}</CardTitle>
+                    <CardText>{course.description}</CardText>
+                    <button
+                      className="btn btn-success"
+                      onClick={() => onEnroll(course._id)}
+                      disabled={!userId}
+                    >
+                      Enroll
+                    </button>
+                  </CardBody>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </>
+      )}
     </div>
   );
 }

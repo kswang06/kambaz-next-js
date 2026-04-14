@@ -23,7 +23,7 @@ export default function CourseNavigation() {
       {links.map((label) => {
         const lower = label.toLowerCase();
         const href = `/courses/${cid}/${lower}`;
-        const active = pathname === href;
+        const active = pathname === href || pathname.startsWith(`${href}/`);
 
         return (
           <Link
