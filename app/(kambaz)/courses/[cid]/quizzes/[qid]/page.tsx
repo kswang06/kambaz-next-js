@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Alert, Badge, Button, Card } from "react-bootstrap";
 import { useSelector } from "react-redux";
-import { RootState } from "../../../../../store";
+import { RootState } from "../../../../store";
 import * as client from "../../../client";
 
 const QUIZ_TYPE_LABELS: Record<string, string> = {
