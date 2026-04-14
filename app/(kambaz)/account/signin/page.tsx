@@ -49,6 +49,30 @@ export default function Signin() {
         {" "}
         Sign up{" "}
       </Link>
+      <hr />
+      <div className="mt-3">
+        <div>Kevin Wang</div>
+        <div>
+          Frontend:{" "}
+          <a
+            href="https://github.com/kswang06/kambaz-next-js"
+            target="_blank"
+            rel="noreferrer"
+          >
+            https://github.com/kswang06/kambaz-next-js
+          </a>
+        </div>
+        <div>
+          Backend:{" "}
+          <a
+            href="https://github.com/kswang06/kambaz-node-server-app"
+            target="_blank"
+            rel="noreferrer"
+          >
+            https://github.com/kswang06/kambaz-node-server-app
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
