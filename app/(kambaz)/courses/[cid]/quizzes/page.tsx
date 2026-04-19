@@ -5,8 +5,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Button, Form, ListGroup, ListGroupItem } from "react-bootstrap";
-import { BsPlus, BsThreeDotsVertical, BsTrash } from "react-icons/bs";
+import { Button, Dropdown, Form, ListGroup, ListGroupItem } from "react-bootstrap";
+import { BsPencilSquare, BsPlus, BsThreeDotsVertical, BsTrash } from "react-icons/bs";
 import { FaBan, FaCheckCircle, FaRegClipboard } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store";
@@ -47,7 +47,7 @@ export default function QuizzesPage() {
   const { cid } = useParams<{ cid: string }>();
   const router = useRouter();
   const { currentUser } = useSelector((state: RootState) => state.accountReducer);
-  const [sortBy, setSortBy] = useState("title");
+  const [sortBy, setSortBy] = useState("availableDate");
   const [quizzes, setQuizzes] = useState<any[]>([]);
 
   const role =
@@ -68,10 +68,15 @@ export default function QuizzesPage() {
   const visibleQuizzes = useMemo(() => {
     const scoped = isFaculty ? quizzes : quizzes.filter((quiz) => quiz.published);
     const items = [...scoped];
+    const compareDate = (left?: string, right?: string) => {
+      const leftValue = left || "9999-12-31";
+      const rightValue = right || "9999-12-31";
+      return leftValue.localeCompare(rightValue);
+    };
     items.sort((a, b) => {
-      if (sortBy === "dueDate") return (a.dueDate || "").localeCompare(b.dueDate || "");
+      if (sortBy === "dueDate") return compareDate(a.dueDate, b.dueDate);
       if (sortBy === "availableDate") {
-        return (a.availableDate || "").localeCompare(b.availableDate || "");
+        return compareDate(a.availableDate, b.availableDate);
       }
       return a.title.localeCompare(b.title);
     });
@@ -186,21 +191,40 @@ export default function QuizzesPage() {
 
                   {isFaculty && (
                     <div className="d-flex align-items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline-secondary"
-                        onClick={() => router.push(`/courses/${cid}/quizzes/${quiz._id}/edit`)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline-danger"
-                        onClick={() => onDeleteQuiz(quiz)}
-                      >
-                        <BsTrash />
-                      </Button>
-                      <BsThreeDotsVertical className="text-muted" />
+                      <Dropdown align="end">
+                        <Dropdown.Toggle
+                          variant="outline-secondary"
+                          size="sm"
+                          id={`wd-quiz-menu-${quiz._id}`}
+                        >
+                          <BsThreeDotsVertical />
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu>
+                          <Dropdown.Item
+                            onClick={() => router.push(`/courses/${cid}/quizzes/${quiz._id}/edit`)}
+                          >
+                            <BsPencilSquare className="me-2" />
+                            Edit
+                          </Dropdown.Item>
+                          <Dropdown.Item onClick={() => onTogglePublish(quiz)}>
+                            {quiz.published ? (
+                              <>
+                                <FaBan className="me-2" />
+                                Unpublish
+                              </>
+                            ) : (
+                              <>
+                                <FaCheckCircle className="me-2 text-success" />
+                                Publish
+                              </>
+                            )}
+                          </Dropdown.Item>
+                          <Dropdown.Item className="text-danger" onClick={() => onDeleteQuiz(quiz)}>
+                            <BsTrash className="me-2" />
+                            Delete
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
                     </div>
                   )}
                 </div>

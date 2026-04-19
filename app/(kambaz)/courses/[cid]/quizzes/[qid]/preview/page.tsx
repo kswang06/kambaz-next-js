@@ -65,6 +65,7 @@ export default function QuizPreviewPage() {
   const [submittedAttempt, setSubmittedAttempt] = useState<any>(null);
   const [accessCodeInput, setAccessCodeInput] = useState("");
   const [accessGranted, setAccessGranted] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   const role = (currentUser as { role?: string } | null)?.role ?? "STUDENT";
   const isFaculty = role === "FACULTY";
@@ -73,6 +74,7 @@ export default function QuizPreviewPage() {
     client.findQuizById(qid).then((data) => {
       setQuiz(data);
       setAccessGranted(!data.accessCode);
+      setCurrentQuestionIndex(0);
     });
 
     client
@@ -99,6 +101,7 @@ export default function QuizPreviewPage() {
   const answerMap = answersByQuestion(readonlyAttempt ?? undefined);
   const resultMap = resultByQuestion(readonlyAttempt ?? undefined);
   const questions: any[] = Array.isArray(quiz.questions) ? quiz.questions : [];
+  const currentQuestion = questions[currentQuestionIndex];
 
   const setAnswer = (questionId: string, value: any) => {
     setAnswers((current) => ({ ...current, [questionId]: value }));
@@ -139,6 +142,7 @@ export default function QuizPreviewPage() {
   const resetFacultyPreview = () => {
     setAnswers({});
     setSubmittedAttempt(null);
+    setCurrentQuestionIndex(0);
   };
 
   const allowStart =
@@ -224,35 +228,78 @@ export default function QuizPreviewPage() {
         </Alert>
       )}
 
-      {questions.map((question, index) => (
-        <QuizQuestionCard
-          key={question._id}
-          question={question}
-          index={index}
-          readOnly={!allowStart || Boolean(readonlyAttempt)}
-          answer={
-            readonlyAttempt
-              ? answerMap.get(question._id)
-              : answers[question._id]
-          }
-          result={resultMap.get(question._id)}
-          showCorrectAnswers={Boolean(submittedAttempt)}
-          onAnswerChange={setAnswer}
-        />
-      ))}
+      {questions.length === 0 ? (
+        <Alert variant="secondary">This quiz does not have any questions yet.</Alert>
+      ) : (
+        <>
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+            <div className="fw-semibold">
+              Question {currentQuestionIndex + 1} of {questions.length}
+            </div>
+            <div className="d-flex flex-wrap gap-2">
+              {questions.map((question, index) => (
+                <Button
+                  key={question._id}
+                  size="sm"
+                  variant={index === currentQuestionIndex ? "danger" : "outline-secondary"}
+                  onClick={() => setCurrentQuestionIndex(index)}
+                >
+                  {index + 1}
+                </Button>
+              ))}
+            </div>
+          </div>
 
-      <div className="d-flex justify-content-end gap-2 mt-4">
-        {isFaculty && readonlyAttempt ? (
-          <Button variant="outline-secondary" onClick={resetFacultyPreview}>
-            Reset Preview
-          </Button>
-        ) : null}
+          <QuizQuestionCard
+            key={currentQuestion._id}
+            question={currentQuestion}
+            index={currentQuestionIndex}
+            readOnly={!allowStart || Boolean(readonlyAttempt)}
+            answer={
+              readonlyAttempt
+                ? answerMap.get(currentQuestion._id)
+                : answers[currentQuestion._id]
+            }
+            result={resultMap.get(currentQuestion._id)}
+            showCorrectAnswers={Boolean(submittedAttempt)}
+            onAnswerChange={setAnswer}
+          />
+        </>
+      )}
 
-        {!readonlyAttempt && allowStart && (
-          <Button variant="danger" onClick={submit}>
-            Submit Quiz
+      <div className="d-flex justify-content-between gap-2 mt-4 flex-wrap">
+        <div className="d-flex gap-2">
+          <Button
+            variant="outline-secondary"
+            disabled={questions.length === 0 || currentQuestionIndex === 0}
+            onClick={() => setCurrentQuestionIndex((index) => Math.max(index - 1, 0))}
+          >
+            Previous
           </Button>
-        )}
+          <Button
+            variant="outline-secondary"
+            disabled={questions.length === 0 || currentQuestionIndex === questions.length - 1}
+            onClick={() =>
+              setCurrentQuestionIndex((index) => Math.min(index + 1, questions.length - 1))
+            }
+          >
+            Next
+          </Button>
+        </div>
+
+        <div className="d-flex justify-content-end gap-2">
+          {isFaculty && readonlyAttempt ? (
+            <Button variant="outline-secondary" onClick={resetFacultyPreview}>
+              Reset Preview
+            </Button>
+          ) : null}
+
+          {!readonlyAttempt && allowStart && questions.length > 0 && (
+            <Button variant="danger" onClick={submit}>
+              Submit Quiz
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

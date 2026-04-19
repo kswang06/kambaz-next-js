@@ -27,6 +27,7 @@ const SHOW_CORRECT_ANSWER_LABELS: Record<string, string> = {
 };
 const createEmptyQuestion = () => ({
   _id: crypto.randomUUID(),
+  isNew: true,
   type: "MULTIPLE_CHOICE",
   title: "New Question",
   points: 1,
@@ -56,20 +57,24 @@ export default function QuizEditorPage() {
   }
 
   const questions: any[] = Array.isArray(quiz.questions) ? quiz.questions : [];
-  const points = questions.reduce(
+  const questionPoints = questions.reduce(
     (sum: number, question: any) => sum + Number(question.points || 0),
     0,
   );
+  const quizPoints = Number(quiz.points ?? questionPoints);
+  const timedQuiz = Number(quiz.timeLimit || 0) > 0;
 
   const updateQuiz = (changes: any) => {
     setQuiz({ ...quiz, ...changes });
   };
 
   const persistQuiz = (changes?: any) => {
-    return client.updateQuiz({ ...quiz, ...changes, points }).then((nextQuiz) => {
-      setQuiz(nextQuiz);
-      return nextQuiz;
-    });
+    return client
+      .updateQuiz({ ...quiz, ...changes, points: Number((changes?.points ?? quiz.points) || 0) })
+      .then((nextQuiz) => {
+        setQuiz(nextQuiz);
+        return nextQuiz;
+      });
   };
 
   const saveAndReturn = () => {
@@ -90,9 +95,19 @@ export default function QuizEditorPage() {
     setQuiz({
       ...quiz,
       questions: questions.map((question) =>
-        question._id === updatedQuestion._id ? updatedQuestion : question,
+        question._id === updatedQuestion._id
+          ? { ...updatedQuestion, isNew: false }
+          : question,
       ),
     });
+    setEditingQuestionId(null);
+  };
+
+  const cancelQuestionEdit = (questionId: string, isNew: boolean) => {
+    if (isNew) {
+      removeQuestion(questionId);
+      return;
+    }
     setEditingQuestionId(null);
   };
 
@@ -201,7 +216,12 @@ export default function QuizEditorPage() {
 
               <div className="col-md-4">
                 <Form.Label>Points</Form.Label>
-                <Form.Control value={points} disabled />
+                <Form.Control
+                  type="number"
+                  min={0}
+                  value={quizPoints}
+                  onChange={(event) => updateQuiz({ points: Number(event.target.value) || 0 })}
+                />
               </div>
 
               <div className="col-md-3">
@@ -247,10 +267,20 @@ export default function QuizEditorPage() {
               </div>
 
               <div className="col-md-4">
-                <Form.Label>Time Limit (Minutes)</Form.Label>
+                <Form.Check
+                  className="mb-2"
+                  label="Time Limit"
+                  checked={timedQuiz}
+                  onChange={(event) =>
+                    updateQuiz({
+                      timeLimit: event.target.checked ? Math.max(quiz.timeLimit || 20, 1) : 0,
+                    })
+                  }
+                />
                 <Form.Control
                   type="number"
                   min={0}
+                  disabled={!timedQuiz}
                   value={quiz.timeLimit}
                   onChange={(event) => updateQuiz({ timeLimit: Number(event.target.value) })}
                 />
@@ -314,7 +344,7 @@ export default function QuizEditorPage() {
               </div>
 
               <div className="col-md-4">
-                <Form.Label>Available Date</Form.Label>
+                <Form.Label>Available From</Form.Label>
                 <Form.Control
                   type="date"
                   value={quiz.availableDate}
@@ -323,7 +353,7 @@ export default function QuizEditorPage() {
               </div>
 
               <div className="col-md-4">
-                <Form.Label>Until Date</Form.Label>
+                <Form.Label>Until</Form.Label>
                 <Form.Control
                   type="date"
                   value={quiz.untilDate}
@@ -338,7 +368,7 @@ export default function QuizEditorPage() {
           <div className="d-flex justify-content-between align-items-center mb-3">
             <div>
               <h5 className="mb-1">Questions</h5>
-              <div className="text-muted small">{points} total points</div>
+              <div className="text-muted small">{questionPoints} total question points</div>
             </div>
             <Button variant="danger" onClick={onNewQuestion}>
               New Question
@@ -354,7 +384,7 @@ export default function QuizEditorPage() {
                   {editingQuestionId === question._id ? (
                     <QuizQuestionEditor
                       initialQuestion={question}
-                      onCancel={() => setEditingQuestionId(null)}
+                      onCancel={() => cancelQuestionEdit(question._id, Boolean(question.isNew))}
                       onSave={updateQuestion}
                     />
                   ) : (
@@ -526,7 +556,7 @@ function QuizQuestionEditor({
             Cancel
           </Button>
           <Button variant="danger" onClick={() => onSave(normalizedQuestion)}>
-            Save Question
+            Save
           </Button>
         </div>
       </Card.Body>
@@ -572,7 +602,7 @@ function MultipleChoiceEditor({
       <div className="d-flex justify-content-between align-items-center mb-2">
         <Form.Label className="mb-0">Choices</Form.Label>
         <Button variant="outline-secondary" size="sm" onClick={addChoice}>
-          Add Choice
+          Add Option
         </Button>
       </div>
       {question.choices.map((choice: any, index: number) => (
@@ -665,16 +695,16 @@ function FillBlankEditor({
   return (
     <div className="mt-4">
       <div className="d-flex justify-content-between align-items-center mb-2">
-        <Form.Label className="mb-0">Accepted Answers</Form.Label>
+        <Form.Label className="mb-0">Blank Answers</Form.Label>
         <Button variant="outline-secondary" size="sm" onClick={addAnswer}>
-          Add Answer
+          Add Blank
         </Button>
       </div>
       {question.answers.map((answer: string, index: number) => (
         <div key={`${question._id}-${index}`} className="d-flex gap-2 mb-2">
           <Form.Control
             value={answer}
-            placeholder={`Accepted answer ${index + 1}`}
+            placeholder={`Blank ${index + 1} answer`}
             onChange={(event) => updateAnswer(index, event.target.value)}
           />
           <Button
