@@ -102,16 +102,16 @@ export default function Dashboard() {
   const onAddNewCourse = async () => {
     try {
       const courseWithImage = {
-        ...course,
+        name: course.name?.trim() || "New Course",
+        number: course.number?.trim() || "New Number",
+        startDate: course.startDate || "2023-09-10",
+        endDate: course.endDate || "2023-12-15",
         image: getImageForNewCourse(course.name),
+        description: course.description?.trim() || "New Description",
       };
-      dispatch(addNewCourse(courseWithImage));
 
-      try {
-        await client.createCourse(courseWithImage);
-      } catch (error) {
-        console.error(error);
-      }
+      const createdCourse = await client.createCourse(courseWithImage);
+      dispatch(addNewCourse(createdCourse));
       await fetchDashboardData();
 
       setCourse({
@@ -124,7 +124,7 @@ export default function Dashboard() {
         description: "New Description",
       });
     } catch (error) {
-      console.error(error);
+      console.error("Failed to add course", error);
     }
   };
 

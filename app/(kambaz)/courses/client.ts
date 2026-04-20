@@ -46,18 +46,22 @@ export const updateModule = async (courseId: string, module: any) => {
 
 
 export const createCourse = async (course: any) => {
+  const { _id, ...courseData } = course;
   const { data } = await axiosWithCredentials.post(
     `${USERS_API}/current/courses`,
-    course
+    courseData
   );
   return data;
 };
 export const deleteCourse = async (id: string) => {
-  const { data } = await axios.delete(`${COURSES_API}/${id}`);
+  const { data } = await axiosWithCredentials.delete(`${COURSES_API}/${id}`);
   return data;
 };
 export const updateCourse = async (course: any) => {
-  const { data } = await axios.put(`${COURSES_API}/${course._id}`, course);
+  const { data } = await axiosWithCredentials.put(
+    `${COURSES_API}/${course._id}`,
+    course
+  );
   return data;
 };
 
